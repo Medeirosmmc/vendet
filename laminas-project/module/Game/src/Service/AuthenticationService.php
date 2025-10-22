@@ -37,14 +37,14 @@ class AuthenticationService implements AdapterInterface
             return new Result(Result::FAILURE_IDENTITY_NOT_FOUND, null, ['Invalid credentials.']);
         }
 
-        // NOTA: A verificação de senha em texto plano é insegura e temporária.
-        // Será substituída por password_verify() após a migração das senhas.
-        if ($this->password !== $user->pass) {
+        if (!password_verify($this->password, $user->pass)) {
             return new Result(Result::FAILURE_CREDENTIAL_INVALID, null, ['Invalid credentials.']);
         }
 
-        // A lógica para verificar o banimento será adicionada aqui.
+        if ($user->baneado) {
+            return new Result(Result::FAILURE, null, ['User is banned.']);
+        }
 
-        return new Result(Result::SUCCESS, $user, ['Authentication successful.']);
+        return new Result(Result::SUCCESS, $user->id_usuario, ['Authentication successful.']);
     }
 }

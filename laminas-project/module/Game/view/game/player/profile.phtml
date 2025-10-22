@@ -1,0 +1,8 @@
+<h1>Player Profile</h1>
+
+<h2><?= $this->escapeHtml($this->player->usuario) ?></h2>
+
+<ul>
+    <li>Points: <?= $this->escapeHtml($this->player->puntos_edificios + $this->player->puntos_entrenamientos + $this->player->puntos_tropas) ?></li>
+    <li>Email: <?= $this->escapeHtml($this->player->email) ?></li>
+</ul>
