@@ -1,0 +1,20 @@
+<h1>Training Queue</h1>
+
+<table>
+    <thead>
+        <tr>
+            <th>Unit</th>
+            <th>Level</th>
+            <th>Finishes At</th>
+        </tr>
+    </thead>
+    <tbody>
+        <?php foreach ($this->trainingQueue as $item): ?>
+            <tr>
+                <td><?= $this->escapeHtml($item->entrenamiento) ?></td>
+                <td><?= $this->escapeHtml($item->nivel) ?></td>
+                <td><?= $this->escapeHtml($item->fecha_fin) ?></td>
+            </tr>
+        <?php endforeach; ?>
+    </tbody>
+</table>

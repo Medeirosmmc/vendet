@@ -8,6 +8,8 @@ use Game\Service\PlayerService;
 use Game\Service\Factory\PlayerServiceFactory;
 use Game\Service\ConstructionService;
 use Game\Service\Factory\ConstructionServiceFactory;
+use Game\Service\TrainingService;
+use Game\Service\Factory\TrainingServiceFactory;
 use Laminas\Authentication\AuthenticationService;
 use Laminas\Router\Http\Literal;
 use Laminas\ServiceManager\Factory\InvokableFactory;
@@ -15,6 +17,8 @@ use Game\Controller\AuthController;
 use Game\Controller\Factory\AuthControllerFactory;
 use Game\Controller\ConstructionController;
 use Game\Controller\Factory\ConstructionControllerFactory;
+use Game\Controller\TrainingController;
+use Game\Controller\Factory\TrainingControllerFactory;
 use Laminas\Router\Http\Segment;
 
 return [
@@ -24,6 +28,7 @@ return [
             AuthenticationService::class => LaminasAuthServiceFactory::class,
             PlayerService::class => PlayerServiceFactory::class,
             ConstructionService::class => ConstructionServiceFactory::class,
+            TrainingService::class => TrainingServiceFactory::class,
         ],
     ],
     'router' => [
@@ -34,6 +39,16 @@ return [
                     'route'    => '/game',
                     'defaults' => [
                         'controller' => Controller\IndexController::class,
+                        'action'     => 'index',
+                    ],
+                ],
+            ],
+            'training' => [
+                'type'    => Literal::class,
+                'options' => [
+                    'route'    => '/training',
+                    'defaults' => [
+                        'controller' => TrainingController::class,
                         'action'     => 'index',
                     ],
                 ],
@@ -89,6 +104,7 @@ return [
             AuthController::class => AuthControllerFactory::class,
             \Game\Controller\PlayerController::class => \Game\Controller\Factory\PlayerControllerFactory::class,
             ConstructionController::class => ConstructionControllerFactory::class,
+            TrainingController::class => TrainingControllerFactory::class,
         ],
     ],
     'view_manager' => [
