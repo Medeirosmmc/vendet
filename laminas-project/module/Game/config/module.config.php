@@ -10,6 +10,10 @@ use Game\Service\ConstructionService;
 use Game\Service\Factory\ConstructionServiceFactory;
 use Game\Service\TrainingService;
 use Game\Service\Factory\TrainingServiceFactory;
+use Game\Service\TroopService;
+use Game\Service\Factory\TroopServiceFactory;
+use Game\Service\CombatService;
+use Game\Service\Factory\CombatServiceFactory;
 use Laminas\Authentication\AuthenticationService;
 use Laminas\Router\Http\Literal;
 use Laminas\ServiceManager\Factory\InvokableFactory;
@@ -19,6 +23,10 @@ use Game\Controller\ConstructionController;
 use Game\Controller\Factory\ConstructionControllerFactory;
 use Game\Controller\TrainingController;
 use Game\Controller\Factory\TrainingControllerFactory;
+use Game\Controller\TroopController;
+use Game\Controller\Factory\TroopControllerFactory;
+use Game\Controller\CombatController;
+use Game\Controller\Factory\CombatControllerFactory;
 use Laminas\Router\Http\Segment;
 
 return [
@@ -29,6 +37,8 @@ return [
             PlayerService::class => PlayerServiceFactory::class,
             ConstructionService::class => ConstructionServiceFactory::class,
             TrainingService::class => TrainingServiceFactory::class,
+            TroopService::class => TroopServiceFactory::class,
+            CombatService::class => CombatServiceFactory::class,
         ],
     ],
     'router' => [
@@ -39,6 +49,26 @@ return [
                     'route'    => '/game',
                     'defaults' => [
                         'controller' => Controller\IndexController::class,
+                        'action'     => 'index',
+                    ],
+                ],
+            ],
+            'combat' => [
+                'type'    => Segment::class,
+                'options' => [
+                    'route'    => '/combat[/:action]',
+                    'defaults' => [
+                        'controller' => CombatController::class,
+                        'action'     => 'index',
+                    ],
+                ],
+            ],
+            'troop' => [
+                'type'    => Literal::class,
+                'options' => [
+                    'route'    => '/troop',
+                    'defaults' => [
+                        'controller' => TroopController::class,
                         'action'     => 'index',
                     ],
                 ],
@@ -105,6 +135,8 @@ return [
             \Game\Controller\PlayerController::class => \Game\Controller\Factory\PlayerControllerFactory::class,
             ConstructionController::class => ConstructionControllerFactory::class,
             TrainingController::class => TrainingControllerFactory::class,
+            TroopController::class => TroopControllerFactory::class,
+            CombatController::class => CombatControllerFactory::class,
         ],
     ],
     'view_manager' => [

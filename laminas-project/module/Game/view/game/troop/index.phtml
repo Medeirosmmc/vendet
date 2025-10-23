@@ -1,0 +1,18 @@
+<h1>Your Troops</h1>
+
+<table>
+    <thead>
+        <tr>
+            <th>Unit</th>
+            <th>Quantity</th>
+        </tr>
+    </thead>
+    <tbody>
+        <?php foreach ($this->troops as $troop): ?>
+            <tr>
+                <td><?= $this->escapeHtml($troop->tropa) ?></td>
+                <td><?= $this->escapeHtml($troop->cantidad) ?></td>
+            </tr>
+        <?php endforeach; ?>
+    </tbody>
+</table>
