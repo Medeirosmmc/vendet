@@ -22,7 +22,19 @@ class CombatController extends AbstractActionController
 
     public function attackAction()
     {
-        // Lógica para iniciar um ataque.
+        if ($this->getRequest()->isPost()) {
+            $data = $this->params()->fromPost();
+            $attackerId = $this->identity();
+            $defenderId = (int) $data['defender_id'];
+            $attackingTroops = $data['troops']; // Espera um array como ['soldado' => 10, 'artillero' => 5]
+
+            $result = $this->combatService->simulateCombat($attackerId, $defenderId, $attackingTroops);
+
+            // TODO: Salvar o relatório da batalha no banco de dados.
+
+            return new ViewModel(['result' => $result]);
+        }
+
         return new ViewModel();
     }
 }
