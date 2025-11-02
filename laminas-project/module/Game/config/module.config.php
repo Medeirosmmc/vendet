@@ -14,6 +14,8 @@ use Game\Service\TroopService;
 use Game\Service\Factory\TroopServiceFactory;
 use Game\Service\CombatService;
 use Game\Service\Factory\CombatServiceFactory;
+use Game\Service\QueueService;
+use Game\Service\Factory\QueueServiceFactory;
 use Laminas\Authentication\AuthenticationService;
 use Laminas\Router\Http\Literal;
 use Laminas\ServiceManager\Factory\InvokableFactory;
@@ -39,6 +41,7 @@ return [
             TrainingService::class => TrainingServiceFactory::class,
             TroopService::class => TroopServiceFactory::class,
             CombatService::class => CombatServiceFactory::class,
+            QueueService::class => QueueServiceFactory::class,
         ],
     ],
     'router' => [
