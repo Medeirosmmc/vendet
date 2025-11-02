@@ -12,7 +12,7 @@ class ConstructionControllerFactory implements FactoryInterface
     public function __invoke(ContainerInterface $container, $requestedName, array $options = null)
     {
         $constructionService = $container->get(ConstructionService::class);
-        $queueService = $container->get(QueueService::class);
+        $queueService = $container->get('ConstructionQueueService');
         return new ConstructionController($constructionService, $queueService);
     }
 }

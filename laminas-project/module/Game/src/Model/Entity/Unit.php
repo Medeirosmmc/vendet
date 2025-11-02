@@ -3,7 +3,7 @@ namespace Game\Model\Entity;
 
 use Game\Service\QueueableInterface;
 
-class Building implements QueueableInterface
+class Unit implements QueueableInterface
 {
     private $name;
     private $level;

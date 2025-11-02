@@ -31,11 +31,47 @@ class QueueServiceTest extends TestCase
             )',
             \Laminas\Db\Adapter\Adapter::QUERY_MODE_EXECUTE
         );
+
+        $this->dbAdapter->query(
+            'CREATE TABLE mob_entrenamientos_nuevos (
+                id_entrenamiento_nuevo INTEGER PRIMARY KEY AUTOINCREMENT,
+                id_usuario INTEGER,
+                id_edificio INTEGER,
+                entrenamiento TEXT,
+                nivel INTEGER,
+                fecha_fin DATETIME,
+                duracion INTEGER,
+                coord TEXT
+            )',
+            \Laminas\Db\Adapter\Adapter::QUERY_MODE_EXECUTE
+        );
     }
 
     public function testGetQueueWithMapper()
     {
         $queueMapper = new \Game\Service\ConstructionQueueMapper($this->dbAdapter);
+        $queueService = new QueueService($queueMapper);
+
+        $eventManager = new EventManager();
+        $eventManager->addIdentifiers(['Game\Service\QueueService']);
+        $queueService->setEventManager($eventManager);
+
+        $this->assertEquals([], $queueService->getQueue(1, 1));
+
+        $itemMock = $this->createMock(QueueableInterface::class);
+        $itemMock->method('getQueueTime')->willReturn(10);
+        $itemMock->method('getQueueItemName')->willReturn('test');
+        $itemMock->method('getQueueItemLevel')->willReturn(1);
+        $itemMock->method('getCoordinates')->willReturn('1:1:1');
+
+        $queueService->addToQueue(1, 1, $itemMock);
+
+        $this->assertCount(1, $queueService->getQueue(1, 1));
+    }
+
+    public function testGetQueueWithTrainingMapper()
+    {
+        $queueMapper = new \Game\Service\TrainingQueueMapper($this->dbAdapter);
         $queueService = new QueueService($queueMapper);
 
         $eventManager = new EventManager();

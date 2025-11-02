@@ -18,6 +18,8 @@ use Game\Service\QueueService;
 use Game\Service\Factory\QueueServiceFactory;
 use Game\Service\ConstructionQueueMapper;
 use Game\Service\Factory\ConstructionQueueMapperFactory;
+use Game\Service\TrainingQueueMapper;
+use Game\Service\Factory\TrainingQueueMapperFactory;
 use Laminas\Authentication\AuthenticationService;
 use Laminas\Router\Http\Literal;
 use Laminas\ServiceManager\Factory\InvokableFactory;
@@ -43,11 +45,14 @@ return [
             TrainingService::class => TrainingServiceFactory::class,
             TroopService::class => TroopServiceFactory::class,
             CombatService::class => CombatServiceFactory::class,
-            QueueService::class => QueueServiceFactory::class,
+            'ConstructionQueueService' => [QueueServiceFactory::class, ['mapper' => 'ConstructionQueueMapper']],
+            'TrainingQueueService' => [QueueServiceFactory::class, ['mapper' => 'TrainingQueueMapper']],
             ConstructionQueueMapper::class => ConstructionQueueMapperFactory::class,
+            TrainingQueueMapper::class => TrainingQueueMapperFactory::class,
         ],
         'aliases' => [
             'ConstructionQueueMapper' => ConstructionQueueMapper::class,
+            'TrainingQueueMapper' => TrainingQueueMapper::class,
         ],
     ],
     'router' => [
@@ -83,9 +88,9 @@ return [
                 ],
             ],
             'training' => [
-                'type'    => Literal::class,
+                'type'    => Segment::class,
                 'options' => [
-                    'route'    => '/training',
+                    'route'    => '/training[/:action[/:id[/:unit]]]',
                     'defaults' => [
                         'controller' => TrainingController::class,
                         'action'     => 'index',

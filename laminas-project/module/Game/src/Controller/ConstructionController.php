@@ -41,7 +41,7 @@ class ConstructionController extends AbstractActionController
         $buildingName = $this->params()->fromRoute('building');
 
         // TODO: Get building details from a service
-        $building = new \Game\Model\Entity\Building();
+        $building = new \Game\Model\Entity\Building($buildingName, 1, '1:1:1', ['arm' => 10, 'mun' => 10, 'dol' => 10], 60);
 
         $this->queueService->addToQueue($userId, $buildingId, $building);
 

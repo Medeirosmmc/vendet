@@ -9,7 +9,10 @@ class QueueServiceFactory implements FactoryInterface
 {
     public function __invoke(ContainerInterface $container, $requestedName, array $options = null)
     {
-        $queueMapper = $container->get('ConstructionQueueMapper');
+        if (empty($options['mapper'])) {
+            throw new \Exception('Mapper not configured for QueueService');
+        }
+        $queueMapper = $container->get($options['mapper']);
         $queueService = new QueueService($queueMapper);
         $queueService->setEventManager($container->get('EventManager'));
         return $queueService;
