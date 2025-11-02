@@ -5,7 +5,6 @@ use Game\Service\AuthenticationService as GameAuthenticationService;
 use Game\Service\Factory\AuthenticationServiceFactory;
 use Game\Service\Factory\LaminasAuthServiceFactory;
 use Game\Service\PlayerService;
-use Game\Service\Factory\PlayerServiceFactory;
 use Game\Service\ConstructionService;
 use Game\Service\TrainingService;
 use Game\Service\TroopService;
@@ -32,7 +31,7 @@ return [
         'factories' => [
             GameAuthenticationService::class => AuthenticationServiceFactory::class,
             AuthenticationService::class => LaminasAuthServiceFactory::class,
-            PlayerService::class => PlayerServiceFactory::class,
+            PlayerService::class => \Laminas\ServiceManager\Factory\ReflectionFactory::class,
             ConstructionService::class => \Laminas\ServiceManager\Factory\ReflectionFactory::class,
             TrainingService::class => \Laminas\ServiceManager\Factory\ReflectionFactory::class,
             TroopService::class => TroopServiceFactory::class,
