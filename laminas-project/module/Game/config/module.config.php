@@ -9,7 +9,6 @@ use Game\Service\ConstructionService;
 use Game\Service\TrainingService;
 use Game\Service\TroopService;
 use Game\Service\CombatService;
-use Game\Service\Factory\CombatServiceFactory;
 use Laminas\Authentication\AuthenticationService;
 use Laminas\Router\Http\Literal;
 use Laminas\ServiceManager\Factory\InvokableFactory;
@@ -34,7 +33,7 @@ return [
             ConstructionService::class => \Laminas\ServiceManager\Factory\ReflectionFactory::class,
             TrainingService::class => \Laminas\ServiceManager\Factory\ReflectionFactory::class,
             TroopService::class => \Laminas\ServiceManager\Factory\ReflectionFactory::class,
-            CombatService::class => CombatServiceFactory::class,
+            CombatService::class => \Laminas\ServiceManager\Factory\ReflectionFactory::class,
         ],
     ],
     'router' => [
