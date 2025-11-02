@@ -93,9 +93,9 @@ return [
                 ],
             ],
             'construction' => [
-                'type'    => Literal::class,
+                'type'    => Segment::class,
                 'options' => [
-                    'route'    => '/construction',
+                    'route'    => '/construction[/:action[/:id[/:building]]]',
                     'defaults' => [
                         'controller' => ConstructionController::class,
                         'action'     => 'index',

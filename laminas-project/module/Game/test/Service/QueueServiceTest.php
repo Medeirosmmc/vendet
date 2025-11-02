@@ -9,6 +9,52 @@ use Laminas\EventManager\EventManager;
 
 class QueueServiceTest extends TestCase
 {
+    private $dbAdapter;
+
+    protected function setUp(): void
+    {
+        $this->dbAdapter = new \Laminas\Db\Adapter\Adapter([
+            'driver'   => 'Pdo_Sqlite',
+            'database' => ':memory:',
+        ]);
+
+        $this->dbAdapter->query(
+            'CREATE TABLE mob_habitaciones_nuevas (
+                id_habitacion_nueva INTEGER PRIMARY KEY AUTOINCREMENT,
+                id_usuario INTEGER,
+                id_edificio INTEGER,
+                habitacion TEXT,
+                nivel INTEGER,
+                fecha_fin DATETIME,
+                duracion INTEGER,
+                coord TEXT
+            )',
+            \Laminas\Db\Adapter\Adapter::QUERY_MODE_EXECUTE
+        );
+    }
+
+    public function testGetQueueWithMapper()
+    {
+        $queueMapper = new \Game\Service\ConstructionQueueMapper($this->dbAdapter);
+        $queueService = new QueueService($queueMapper);
+
+        $eventManager = new EventManager();
+        $eventManager->addIdentifiers(['Game\Service\QueueService']);
+        $queueService->setEventManager($eventManager);
+
+        $this->assertEquals([], $queueService->getQueue(1, 1));
+
+        $itemMock = $this->createMock(QueueableInterface::class);
+        $itemMock->method('getQueueTime')->willReturn(10);
+        $itemMock->method('getQueueItemName')->willReturn('test');
+        $itemMock->method('getQueueItemLevel')->willReturn(1);
+        $itemMock->method('getCoordinates')->willReturn('1:1:1');
+
+        $queueService->addToQueue(1, 1, $itemMock);
+
+        $this->assertCount(1, $queueService->getQueue(1, 1));
+    }
+
     public function testGetQueue()
     {
         $queueMapperMock = $this->createMock(QueueMapperInterface::class);

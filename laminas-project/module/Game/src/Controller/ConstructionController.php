@@ -33,4 +33,18 @@ class ConstructionController extends AbstractActionController
 
         return new ViewModel(['queue' => $queue]);
     }
+
+    public function addAction()
+    {
+        $userId = $this->identity()->id_usuario;
+        $buildingId = (int) $this->params()->fromRoute('id', 0);
+        $buildingName = $this->params()->fromRoute('building');
+
+        // TODO: Get building details from a service
+        $building = new \Game\Model\Entity\Building();
+
+        $this->queueService->addToQueue($userId, $buildingId, $building);
+
+        return $this->redirect()->toRoute('construction', ['action' => 'queue', 'id' => $buildingId]);
+    }
 }

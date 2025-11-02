@@ -14,12 +14,30 @@ class ConstructionQueueMapper implements QueueMapperInterface
 
     public function getQueue($userId, $buildingId)
     {
-        // TODO: Implement the logic to fetch the construction queue from the database
-        return [];
+        $tableGateway = new \Laminas\Db\TableGateway\TableGateway('mob_habitaciones_nuevas', $this->dbAdapter);
+        $rowset = $tableGateway->select(['id_usuario' => $userId, 'id_edificio' => $buildingId]);
+        return $rowset->toArray();
     }
 
     public function addToQueue($userId, $buildingId, QueueableInterface $item)
     {
-        // TODO: Implement the logic to add the item to the database
+        $tableGateway = new \Laminas\Db\TableGateway\TableGateway('mob_habitaciones_nuevas', $this->dbAdapter);
+
+        $select = $tableGateway->getSql()->select();
+        $select->where(['id_edificio' => $buildingId])->order('id_habitacion_nueva DESC')->limit(1);
+
+        $lastInQueue = $tableGateway->selectWith($select)->current();
+
+        $finishTime = empty($lastInQueue) ? time() + $item->getQueueTime() : strtotime($lastInQueue->fecha_fin) + $item->getQueueTime();
+
+        $tableGateway->insert([
+            'id_usuario' => $userId,
+            'id_edificio' => $buildingId,
+            'habitacion' => $item->getQueueItemName(),
+            'nivel' => $item->getQueueItemLevel(),
+            'fecha_fin' => date('Y-m-d H:i:s', $finishTime),
+            'duracion' => $item->getQueueTime(),
+            'coord' => $item->getCoordinates(),
+        ]);
     }
 }
