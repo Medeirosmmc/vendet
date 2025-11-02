@@ -16,6 +16,8 @@ use Game\Service\CombatService;
 use Game\Service\Factory\CombatServiceFactory;
 use Game\Service\QueueService;
 use Game\Service\Factory\QueueServiceFactory;
+use Game\Service\ConstructionQueueMapper;
+use Game\Service\Factory\ConstructionQueueMapperFactory;
 use Laminas\Authentication\AuthenticationService;
 use Laminas\Router\Http\Literal;
 use Laminas\ServiceManager\Factory\InvokableFactory;
@@ -42,6 +44,10 @@ return [
             TroopService::class => TroopServiceFactory::class,
             CombatService::class => CombatServiceFactory::class,
             QueueService::class => QueueServiceFactory::class,
+            ConstructionQueueMapper::class => ConstructionQueueMapperFactory::class,
+        ],
+        'aliases' => [
+            'ConstructionQueueMapper' => ConstructionQueueMapper::class,
         ],
     ],
     'router' => [

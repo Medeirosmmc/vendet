@@ -32,4 +32,10 @@ class QueueService implements EventManagerAwareInterface
     {
         return $this->queueMapper->getQueue($userId, $buildingId);
     }
+
+    public function addToQueue($userId, $buildingId, QueueableInterface $item)
+    {
+        $this->queueMapper->addToQueue($userId, $buildingId, $item);
+        $this->getEventManager()->trigger(__FUNCTION__, $this, compact('userId', 'buildingId', 'item'));
+    }
 }

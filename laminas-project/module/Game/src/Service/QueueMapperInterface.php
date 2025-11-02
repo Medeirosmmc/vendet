@@ -4,4 +4,5 @@ namespace Game\Service;
 interface QueueMapperInterface
 {
     public function getQueue($userId, $buildingId);
+    public function addToQueue($userId, $buildingId, QueueableInterface $item);
 }
