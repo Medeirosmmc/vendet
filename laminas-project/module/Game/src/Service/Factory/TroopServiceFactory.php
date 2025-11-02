@@ -11,6 +11,7 @@ class TroopServiceFactory implements FactoryInterface
     public function __invoke(ContainerInterface $container, $requestedName, array $options = null)
     {
         $dbAdapter = $container->get(AdapterInterface::class);
-        return new TroopService($dbAdapter);
+        $config = $container->get('config');
+        return new TroopService($dbAdapter, $config['troops']);
     }
 }

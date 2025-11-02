@@ -6,10 +6,12 @@ use Laminas\Db\Adapter\AdapterInterface;
 class TroopService
 {
     private $dbAdapter;
+    private $troopConfig;
 
-    public function __construct(AdapterInterface $dbAdapter)
+    public function __construct(AdapterInterface $dbAdapter, array $troopConfig)
     {
         $this->dbAdapter = $dbAdapter;
+        $this->troopConfig = $troopConfig;
     }
 
     public function getTroops($userId)
@@ -24,27 +26,53 @@ class TroopService
         $troops = [];
         $userTroops = $this->getTroops($userId);
 
-        $troopAttributes = [
-            'soldado' => ['attack' => 10, 'defense' => 10],
-            'artillero' => ['attack' => 25, 'defense' => 5],
-            'franco' => ['attack' => 50, 'defense' => 2],
-            // Adicionar outros tipos de tropa aqui
-        ];
-
         foreach ($userTroops as $troop) {
-            if (isset($troopAttributes[$troop->tropa])) {
+            if (isset($this->troopConfig[$troop->tropa])) {
                 if ($troopSelection === null || isset($troopSelection[$troop->tropa])) {
                     $quantity = $troopSelection === null ? $troop->cantidad : $troopSelection[$troop->tropa];
                     $troops[] = [
                         'name' => $troop->tropa,
                         'quantity' => $quantity,
-                        'attack' => $troopAttributes[$troop->tropa]['attack'],
-                        'defense' => $troopAttributes[$troop->tropa]['defense'],
+                        'attack' => $this->troopConfig[$troop->tropa]['attack'],
+                        'defense' => $this->troopConfig[$troop->tropa]['defense'],
                     ];
                 }
             }
         }
 
         return $troops;
+    }
+
+    public function getCombatData(array $attackerTroops, array $defenderTroops)
+    {
+        $troopNames = array_unique(array_merge(array_keys($attackerTroops), array_keys($defenderTroops)));
+        $combatData = [];
+
+        foreach ($troopNames as $troopName) {
+            $attackerQuantity = $attackerTroops[$troopName] ?? 0;
+            $defenderQuantity = $defenderTroops[$troopName] ?? 0;
+
+            $troopDetails = $this->getTroop($troopName);
+
+            $combatData[$troopName] = [
+                'a' => [
+                    'total' => $attackerQuantity,
+                    'ataque' => $troopDetails['attack'],
+                    'defensa' => $troopDetails['defense'],
+                ],
+                'd' => [
+                    'total' => $defenderQuantity,
+                    'ataque' => $troopDetails['attack'],
+                    'defensa' => $troopDetails['defense'],
+                ],
+            ];
+        }
+
+        return $combatData;
+    }
+
+    public function getTroop($troopName)
+    {
+        return $this->troopConfig[$troopName] ?? ['attack' => 0, 'defense' => 0];
     }
 }
