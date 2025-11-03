@@ -2,39 +2,43 @@
 namespace Game\Controller;
 
 use Game\Service\CombatService;
+use Game\Service\TroopService;
 use Laminas\Mvc\Controller\AbstractActionController;
 use Laminas\View\Model\ViewModel;
 
 class CombatController extends AbstractActionController
 {
     private $combatService;
+    private $troopService;
 
-    public function __construct(CombatService $combatService)
+    public function __construct(CombatService $combatService, TroopService $troopService)
     {
         $this->combatService = $combatService;
+        $this->troopService = $troopService;
     }
 
     public function indexAction()
     {
-        // Lógica para listar relatórios de batalha.
-        return new ViewModel();
+        $userId = $this->identity()->id_usuario;
+        $troops = $this->troopService->getTroops($userId);
+        return new ViewModel(['troops' => $troops]);
     }
 
     public function attackAction()
     {
-        if ($this->getRequest()->isPost()) {
-            $data = $this->params()->fromPost();
-            $attackerId = $this->identity();
-            $defenderId = (int) $data['defender_id'];
-            $attackingTroops = $data['troops']; // Espera um array como ['soldado' => 10, 'artillero' => 5]
+        $attackerId = $this->identity()->id_usuario;
+        $defenderId = 2; // placeholder
+        $attackingTroops = ['soldado' => 10]; // placeholder
 
-            $result = $this->combatService->simulateCombat($attackerId, $defenderId, $attackingTroops);
+        $result = $this->combatService->calculateCombat($attackingTroops, []);
 
-            // TODO: Salvar o relatório da batalha no banco de dados.
+        // TODO: Save battle report
 
-            return new ViewModel(['result' => $result]);
-        }
+        return $this->redirect()->toRoute('combat', ['action' => 'report', 'id' => 1]);
+    }
 
+    public function reportAction()
+    {
         return new ViewModel();
     }
 }

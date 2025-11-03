@@ -45,6 +45,18 @@ class QueueServiceTest extends TestCase
             )',
             \Laminas\Db\Adapter\Adapter::QUERY_MODE_EXECUTE
         );
+
+        $this->dbAdapter->query(
+            'CREATE TABLE mob_usuarios (
+                id_usuario INTEGER PRIMARY KEY AUTOINCREMENT,
+                login TEXT,
+                pass TEXT,
+                email TEXT,
+                id_raza INTEGER,
+                baneado INTEGER
+            )',
+            \Laminas\Db\Adapter\Adapter::QUERY_MODE_EXECUTE
+        );
     }
 
     public function testGetQueueWithMapper()
