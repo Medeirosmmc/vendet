@@ -1,2 +1,24 @@
 <h1>Battle Report</h1>
-<p>Battle report placeholder.</p>
+<?php $reportData = json_decode($this->report->html, true); ?>
+<?php foreach ($reportData['rounds'] as $round => $roundData) : ?>
+    <h2>Round <?php echo $round; ?></h2>
+    <h3>Attacker</h3>
+    <p>Power: <?php echo $roundData['attacker_power']; ?></p>
+    <p>Losses: <?php echo $roundData['attacker_losses_pct'] * 100; ?>%</p>
+    <h4>Troops</h4>
+    <ul>
+        <?php foreach ($roundData['attacker_troops'] as $troop => $quantity) : ?>
+            <li><?php echo $troop; ?>: <?php echo $quantity; ?></li>
+        <?php endforeach; ?>
+    </ul>
+    <h3>Defender</h3>
+    <p>Power: <?php echo $roundData['defender_power']; ?></p>
+    <p>Losses: <?php echo $roundData['defender_losses_pct'] * 100; ?>%</p>
+    <h4>Troops</h4>
+    <ul>
+        <?php foreach ($roundData['defender_troops'] as $troop => $quantity) : ?>
+            <li><?php echo $troop; ?>: <?php echo $quantity; ?></li>
+        <?php endforeach; ?>
+    </ul>
+<?php endforeach; ?>
+<h3>Winner: <?php echo $reportData['winner']; ?></h3>

@@ -31,4 +31,11 @@ class ConstructionService
             );
         }
     }
+
+    public function getBuilding($buildingId)
+    {
+        $table = new \Laminas\Db\TableGateway\TableGateway('mob_edificios', $this->dbAdapter);
+        $rowset = $table->select(['id_edificio' => $buildingId]);
+        return $rowset->current();
+    }
 }

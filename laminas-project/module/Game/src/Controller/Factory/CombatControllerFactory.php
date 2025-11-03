@@ -4,6 +4,8 @@ namespace Game\Controller\Factory;
 use Game\Controller\CombatController;
 use Game\Service\CombatService;
 use Game\Service\TroopService;
+use Game\Service\PlayerService;
+use Game\Service\BattleReportService;
 use Interop\Container\ContainerInterface;
 use Laminas\ServiceManager\Factory\FactoryInterface;
 
@@ -13,6 +15,8 @@ class CombatControllerFactory implements FactoryInterface
     {
         $combatService = $container->get(CombatService::class);
         $troopService = $container->get(TroopService::class);
-        return new CombatController($combatService, $troopService);
+        $playerService = $container->get(PlayerService::class);
+        $battleReportService = $container->get(BattleReportService::class);
+        return new CombatController($combatService, $troopService, $playerService, $battleReportService);
     }
 }

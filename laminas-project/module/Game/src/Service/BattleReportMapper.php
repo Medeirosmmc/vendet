@@ -14,13 +14,15 @@ class BattleReportMapper
 
     public function getReport($reportId)
     {
-        // TODO: Implement the logic to fetch the battle report from the database
-        return [];
+        $tableGateway = new \Laminas\Db\TableGateway\TableGateway('mob_batallas', $this->dbAdapter);
+        $rowset = $tableGateway->select(['id_batalla' => $reportId]);
+        return $rowset->current();
     }
 
     public function saveReport($reportData)
     {
-        // TODO: Implement the logic to save the battle report to the database
-        return 1;
+        $tableGateway = new \Laminas\Db\TableGateway\TableGateway('mob_batallas', $this->dbAdapter);
+        $tableGateway->insert($reportData);
+        return $this->dbAdapter->getDriver()->getLastGeneratedValue();
     }
 }
