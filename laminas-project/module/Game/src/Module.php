@@ -15,9 +15,16 @@ class Module implements ConfigProviderInterface
     {
         $eventManager = $e->getApplication()->getEventManager();
         $eventManager->attach(MvcEvent::EVENT_DISPATCH, [$this, 'onDispatch'], 100);
-    }
 
-    public function onDispatch(MvcEvent $e)
+        $serviceManager = $e->getApplication()->getServiceManager();
+        $config = $serviceManager->get('config');
+
+        if (!empty($config['listeners'])) {
+            foreach ($config['listeners'] as $listener => $service) {
+                $serviceManager->get($listener)->attach($serviceManager->get($service . 'Events'));
+            }
+        }
+    }
     {
         $controller = $e->getTarget();
         $controllerName = $e->getRouteMatch()->getParam('controller', null);
@@ -33,6 +40,17 @@ class Module implements ConfigProviderInterface
             $response->setStatusCode(302);
             $response->sendHeaders();
             exit;
+        }
+    }
+
+    public function onBootstrap(MvcEvent $e)
+    {
+        $eventManager = $e->getApplication()->getEventManager();
+        $serviceManager = $e->getApplication()->getServiceManager();
+        $config = $serviceManager->get('config');
+
+        foreach ($config['listeners'] as $listener) {
+            $serviceManager->get($listener)->attach($serviceManager->get($listener . 'Events'));
         }
     }
 }

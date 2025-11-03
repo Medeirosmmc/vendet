@@ -34,10 +34,30 @@ use Game\Controller\Factory\TroopControllerFactory;
 use Game\Controller\CombatController;
 use Game\Controller\Factory\CombatControllerFactory;
 use Laminas\Router\Http\Segment;
+use Game\Command\ProcessQueueCommand;
+use Game\Command\Factory\ProcessQueueCommandFactory;
+use Game\Listener\ConstructionListener;
+use Game\Listener\Factory\ConstructionListenerFactory;
+use Game\Listener\TrainingListener;
+use Game\Listener\Factory\TrainingListenerFactory;
 
 return [
+    'laminas-cli' => [
+        'commands' => [
+            'game:process-queue' => ProcessQueueCommand::class,
+        ],
+    ],
     'service_manager' => [
         'factories' => [
+            ProcessQueueCommand::class => ProcessQueueCommandFactory::class,
+            ConstructionListener::class => ConstructionListenerFactory::class,
+            'ConstructionQueueServiceEvents' => function ($container) {
+                return $container->get('ConstructionQueueService')->getEventManager();
+            },
+            TrainingListener::class => TrainingListenerFactory::class,
+            'TrainingQueueServiceEvents' => function ($container) {
+                return $container->get('TrainingQueueService')->getEventManager();
+            },
             GameAuthenticationService::class => AuthenticationServiceFactory::class,
             AuthenticationService::class => LaminasAuthServiceFactory::class,
             PlayerService::class => PlayerServiceFactory::class,
@@ -54,6 +74,10 @@ return [
             'ConstructionQueueMapper' => ConstructionQueueMapper::class,
             'TrainingQueueMapper' => TrainingQueueMapper::class,
         ],
+    ],
+    'listeners' => [
+        'ConstructionListener' => 'ConstructionQueueService',
+        'TrainingListener' => 'TrainingQueueService',
     ],
     'router' => [
         'routes' => [

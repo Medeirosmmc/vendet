@@ -101,6 +101,27 @@ class QueueServiceTest extends TestCase
         $this->assertEquals([], $queueService->getQueue(1, 1));
     }
 
+    public function testProcessQueue()
+    {
+        $queueMapperMock = $this->createMock(QueueMapperInterface::class);
+        $queueMapperMock->method('getFinishedItems')->willReturn([['id' => 1], ['id' => 2]]);
+        $queueMapperMock->expects($this->once())->method('removeFinishedItems');
+
+        $queueService = new QueueService($queueMapperMock);
+
+        $eventManager = new EventManager();
+        $eventManager->addIdentifiers(['Game\Service\QueueService']);
+        $triggered = 0;
+        $eventManager->attach('processQueue.item', function ($e) use (&$triggered) {
+            $triggered++;
+        });
+        $queueService->setEventManager($eventManager);
+
+        $queueService->processQueue();
+
+        $this->assertEquals(2, $triggered);
+    }
+
     public function testAddToQueue()
     {
         $queueMapperMock = $this->createMock(QueueMapperInterface::class);

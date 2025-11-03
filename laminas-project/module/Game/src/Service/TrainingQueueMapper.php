@@ -40,4 +40,17 @@ class TrainingQueueMapper implements QueueMapperInterface
             'coord' => $item->getCoordinates(),
         ]);
     }
+
+    public function getFinishedItems()
+    {
+        $tableGateway = new \Laminas\Db\TableGateway\TableGateway('mob_entrenamientos_nuevos', $this->dbAdapter);
+        $rowset = $tableGateway->select(['fecha_fin < ?' => date('Y-m-d H:i:s')]);
+        return $rowset->toArray();
+    }
+
+    public function removeFinishedItems()
+    {
+        $tableGateway = new \Laminas\Db\TableGateway\TableGateway('mob_entrenamientos_nuevos', $this->dbAdapter);
+        $tableGateway->delete(['fecha_fin < ?' => date('Y-m-d H:i:s')]);
+    }
 }

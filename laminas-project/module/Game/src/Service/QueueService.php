@@ -38,4 +38,15 @@ class QueueService implements EventManagerAwareInterface
         $this->queueMapper->addToQueue($userId, $buildingId, $item);
         $this->getEventManager()->trigger(__FUNCTION__, $this, compact('userId', 'buildingId', 'item'));
     }
+
+    public function processQueue()
+    {
+        $finishedItems = $this->queueMapper->getFinishedItems();
+
+        foreach ($finishedItems as $item) {
+            $this->getEventManager()->trigger(__FUNCTION__.'.item', $this, ['item' => $item]);
+        }
+
+        $this->queueMapper->removeFinishedItems();
+    }
 }
