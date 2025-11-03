@@ -2,7 +2,6 @@
 namespace Game;
 
 use Game\Service\AuthenticationService as GameAuthenticationService;
-use Game\Service\Factory\AuthenticationServiceFactory;
 use Game\Service\Factory\LaminasAuthServiceFactory;
 use Game\Service\PlayerService;
 use Game\Service\ConstructionService;
@@ -27,7 +26,7 @@ use Laminas\Router\Http\Segment;
 return [
     'service_manager' => [
         'factories' => [
-            GameAuthenticationService::class => AuthenticationServiceFactory::class,
+            GameAuthenticationService::class => \Laminas\ServiceManager\Factory\ReflectionFactory::class,
             AuthenticationService::class => LaminasAuthServiceFactory::class,
             PlayerService::class => \Laminas\ServiceManager\Factory\ReflectionFactory::class,
             ConstructionService::class => \Laminas\ServiceManager\Factory\ReflectionFactory::class,
