@@ -3,6 +3,7 @@ namespace Game\Controller;
 
 use Game\Service\ConstructionService;
 use Game\Service\QueueService;
+use Game\Service\BuildingDataService;
 use Laminas\Mvc\Controller\AbstractActionController;
 use Laminas\View\Model\ViewModel;
 
@@ -10,11 +11,16 @@ class ConstructionController extends AbstractActionController
 {
     private $constructionService;
     private $queueService;
+    private $buildingDataService;
 
-    public function __construct(ConstructionService $constructionService, QueueService $queueService)
-    {
+    public function __construct(
+        ConstructionService $constructionService,
+        QueueService $queueService,
+        BuildingDataService $buildingDataService
+    ) {
         $this->constructionService = $constructionService;
         $this->queueService = $queueService;
+        $this->buildingDataService = $buildingDataService;
     }
 
     public function indexAction()
@@ -40,8 +46,15 @@ class ConstructionController extends AbstractActionController
         $buildingId = (int) $this->params()->fromRoute('id', 0);
         $buildingName = $this->params()->fromRoute('building');
 
-        // TODO: Get building details from a service
-        $building = new \Game\Model\Entity\Building($buildingName, 1, '1:1:1', ['arm' => 10, 'mun' => 10, 'dol' => 10], 60);
+        $buildingDetails = $this->constructionService->getBuilding($buildingId);
+        $currentLevel = $buildingDetails[$buildingName];
+        $officeLevel = $buildingDetails['oficina'];
+
+        $cost = $this->buildingDataService->getCost($buildingName, $currentLevel);
+        $time = $this->buildingDataService->getTime($buildingName, $currentLevel, $officeLevel);
+        $coordinates = $buildingDetails['coord1'] . ':' . $buildingDetails['coord2'] . ':' . $buildingDetails['coord3'];
+
+        $building = new \Game\Model\Entity\Building($buildingName, $currentLevel + 1, $coordinates, $cost, $time);
 
         $this->queueService->addToQueue($userId, $buildingId, $building);
 

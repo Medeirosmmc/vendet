@@ -3,6 +3,7 @@ namespace Game\Controller;
 
 use Game\Service\TrainingService;
 use Game\Service\QueueService;
+use Game\Service\TrainingDataService;
 use Laminas\Mvc\Controller\AbstractActionController;
 use Laminas\View\Model\ViewModel;
 
@@ -10,11 +11,16 @@ class TrainingController extends AbstractActionController
 {
     private $trainingService;
     private $queueService;
+    private $trainingDataService;
 
-    public function __construct(TrainingService $trainingService, QueueService $queueService)
-    {
+    public function __construct(
+        TrainingService $trainingService,
+        QueueService $queueService,
+        TrainingDataService $trainingDataService
+    ) {
         $this->trainingService = $trainingService;
         $this->queueService = $queueService;
+        $this->trainingDataService = $trainingDataService;
     }
 
     public function indexAction()
@@ -40,8 +46,15 @@ class TrainingController extends AbstractActionController
         $buildingId = (int) $this->params()->fromRoute('id', 0);
         $unitName = $this->params()->fromRoute('unit');
 
-        // TODO: Get unit details from a service
-        $unit = new \Game\Model\Entity\Unit($unitName, 1, '1:1:1', ['arm' => 10, 'mun' => 10, 'dol' => 10], 60);
+        $trainingDetails = $this->trainingService->getTraining($userId, $unitName);
+        $currentLevel = $trainingDetails[$unitName];
+        $schoolLevel = $this->trainingService->getSchoolLevel($buildingId);
+
+        $cost = $this->trainingDataService->getCost($unitName, $currentLevel);
+        $time = $this->trainingDataService->getTime($unitName, $currentLevel, $schoolLevel);
+        $coordinates = '1:1:1'; // placeholder
+
+        $unit = new \Game\Model\Entity\Unit($unitName, $currentLevel + 1, $coordinates, $cost, $time);
 
         $this->queueService->addToQueue($userId, $buildingId, $unit);
 

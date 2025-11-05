@@ -1,24 +1,72 @@
 <h1>Battle Report</h1>
 <?php $reportData = json_decode($this->report->html, true); ?>
-<?php foreach ($reportData['rounds'] as $round => $roundData) : ?>
-    <h2>Round <?php echo $round; ?></h2>
-    <h3>Attacker</h3>
-    <p>Power: <?php echo $roundData['attacker_power']; ?></p>
-    <p>Losses: <?php echo $roundData['attacker_losses_pct'] * 100; ?>%</p>
-    <h4>Troops</h4>
+<?php if (!empty($reportData['rounds'])) : ?>
+    <?php foreach ($reportData['rounds'] as $round => $roundData) : ?>
+        <h2>Round <?php echo $round; ?></h2>
+        <h3>Attacker</h3>
+        <p>Attack Power: <?php echo round($roundData['attackerAttackPower']); ?></p>
+        <p>Defense Power: <?php echo round($roundData['attackerDefensePower']); ?></p>
+        <h4>Troops</h4>
+        <ul>
+            <?php foreach ($roundData['troops'] as $troop => $data) : ?>
+                <li><?php echo ucfirst($troop); ?>: <?php echo $data['a']; ?> (Losses: <?php echo $data['muertesA']; ?>)</li>
+            <?php endforeach; ?>
+        </ul>
+        <h3>Defender</h3>
+        <p>Attack Power: <?php echo round($roundData['defenderAttackPower']); ?></p>
+        <p>Defense Power: <?php echo round($roundData['defenderDefensePower']); ?></p>
+        <h4>Troops</h4>
+        <ul>
+            <?php foreach ($roundData['troops'] as $troop => $data) : ?>
+                <li><?php echo ucfirst($troop); ?>: <?php echo $data['d']; ?> (Losses: <?php echo $data['muertesD']; ?>)</li>
+            <?php endforeach; ?>
+        </ul>
+    <?php endforeach; ?>
+
+    <h2>Battle Outcome</h2>
+
+    <h3>Remaining Troops</h3>
+    <h4>Attacker</h4>
     <ul>
-        <?php foreach ($roundData['attacker_troops'] as $troop => $quantity) : ?>
-            <li><?php echo $troop; ?>: <?php echo $quantity; ?></li>
-        <?php endforeach; ?>
+    <?php foreach ($reportData['remaining'] as $troop => $data) : ?>
+        <?php if ($data['a']['total'] > 0): ?>
+        <li><?php echo ucfirst($troop); ?>: <?php echo round($data['a']['total']); ?></li>
+        <?php endif; ?>
+    <?php endforeach; ?>
     </ul>
-    <h3>Defender</h3>
-    <p>Power: <?php echo $roundData['defender_power']; ?></p>
-    <p>Losses: <?php echo $roundData['defender_losses_pct'] * 100; ?>%</p>
-    <h4>Troops</h4>
+    <h4>Defender</h4>
     <ul>
-        <?php foreach ($roundData['defender_troops'] as $troop => $quantity) : ?>
-            <li><?php echo $troop; ?>: <?php echo $quantity; ?></li>
-        <?php endforeach; ?>
+    <?php foreach ($reportData['remaining'] as $troop => $data) : ?>
+        <?php if ($data['d']['total'] > 0): ?>
+        <li><?php echo ucfirst($troop); ?>: <?php echo round($data['d']['total']); ?></li>
+        <?php endif; ?>
+    <?php endforeach; ?>
     </ul>
-<?php endforeach; ?>
-<h3>Winner: <?php echo $reportData['winner']; ?></h3>
+
+    <?php
+    $attackerHasTroops = false;
+    foreach ($reportData['remaining'] as $data) {
+        if (round($data['a']['total']) > 0) {
+            $attackerHasTroops = true;
+            break;
+        }
+    }
+    $defenderHasTroops = false;
+    foreach ($reportData['remaining'] as $data) {
+        if (round($data['d']['total']) > 0) {
+            $defenderHasTroops = true;
+            break;
+        }
+    }
+    if ($attackerHasTroops && !$defenderHasTroops) {
+        $winner = 'Attacker';
+    } elseif (!$attackerHasTroops && $defenderHasTroops) {
+        $winner = 'Defender';
+    } else {
+        $winner = 'Draw';
+    }
+    ?>
+    <h3>Winner: <?php echo $winner; ?></h3>
+<?php else: ?>
+    <p>No battle data found.</p>
+<?php endif; ?>

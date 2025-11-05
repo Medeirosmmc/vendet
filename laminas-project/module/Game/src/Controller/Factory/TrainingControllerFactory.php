@@ -4,6 +4,7 @@ namespace Game\Controller\Factory;
 use Game\Controller\TrainingController;
 use Game\Service\TrainingService;
 use Game\Service\QueueService;
+use Game\Service\TrainingDataService;
 use Interop\Container\ContainerInterface;
 use Laminas\ServiceManager\Factory\FactoryInterface;
 
@@ -13,6 +14,7 @@ class TrainingControllerFactory implements FactoryInterface
     {
         $trainingService = $container->get(TrainingService::class);
         $queueService = $container->get('TrainingQueueService');
-        return new TrainingController($trainingService, $queueService);
+        $trainingDataService = $container->get(TrainingDataService::class);
+        return new TrainingController($trainingService, $queueService, $trainingDataService);
     }
 }

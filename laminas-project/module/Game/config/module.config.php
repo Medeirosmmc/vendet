@@ -44,6 +44,10 @@ use Game\Listener\ConstructionListener;
 use Game\Listener\Factory\ConstructionListenerFactory;
 use Game\Listener\TrainingListener;
 use Game\Listener\Factory\TrainingListenerFactory;
+use Game\Service\BuildingDataService;
+use Game\Service\Factory\BuildingDataServiceFactory;
+use Game\Service\TrainingDataService;
+use Game\Service\Factory\TrainingDataServiceFactory;
 
 return [
     'laminas-cli' => [
@@ -75,6 +79,8 @@ return [
             TrainingQueueMapper::class => TrainingQueueMapperFactory::class,
             BattleReportService::class => BattleReportServiceFactory::class,
             BattleReportMapper::class => BattleReportMapperFactory::class,
+            BuildingDataService::class => BuildingDataServiceFactory::class,
+            TrainingDataService::class => TrainingDataServiceFactory::class,
         ],
         'aliases' => [
             'ConstructionQueueMapper' => ConstructionQueueMapper::class,
