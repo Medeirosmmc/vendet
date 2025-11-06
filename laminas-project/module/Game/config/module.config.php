@@ -37,6 +37,8 @@ use Game\Controller\TroopController;
 use Game\Controller\Factory\TroopControllerFactory;
 use Game\Controller\CombatController;
 use Game\Controller\Factory\CombatControllerFactory;
+use Game\Controller\MessageController;
+use Game\Controller\Factory\MessageControllerFactory;
 use Laminas\Router\Http\Segment;
 use Game\Command\ProcessQueueCommand;
 use Game\Command\Factory\ProcessQueueCommandFactory;
@@ -48,6 +50,8 @@ use Game\Service\BuildingDataService;
 use Game\Service\Factory\BuildingDataServiceFactory;
 use Game\Service\TrainingDataService;
 use Game\Service\Factory\TrainingDataServiceFactory;
+use Game\Service\MessageService;
+use Game\Service\Factory\MessageServiceFactory;
 
 return [
     'laminas-cli' => [
@@ -81,6 +85,7 @@ return [
             BattleReportMapper::class => BattleReportMapperFactory::class,
             BuildingDataService::class => BuildingDataServiceFactory::class,
             TrainingDataService::class => TrainingDataServiceFactory::class,
+            MessageService::class => MessageServiceFactory::class,
         ],
         'aliases' => [
             'ConstructionQueueMapper' => ConstructionQueueMapper::class,
@@ -176,6 +181,16 @@ return [
                     ],
                 ],
             ],
+            'message' => [
+                'type'    => Segment::class,
+                'options' => [
+                    'route'    => '/message[/:action[/:id]]',
+                    'defaults' => [
+                        'controller' => MessageController::class,
+                        'action'     => 'index',
+                    ],
+                ],
+            ],
         ],
     ],
     'controllers' => [
@@ -187,6 +202,7 @@ return [
             TrainingController::class => TrainingControllerFactory::class,
             TroopController::class => TroopControllerFactory::class,
             CombatController::class => CombatControllerFactory::class,
+            MessageController::class => MessageControllerFactory::class,
         ],
     ],
     'view_manager' => [

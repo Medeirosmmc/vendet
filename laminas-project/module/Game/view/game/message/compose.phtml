@@ -1,0 +1,13 @@
+<h1>Compose Message</h1>
+
+<?php
+$form = $this->form;
+$form->setAttribute('action', $this->url('message', ['action' => 'send']));
+$form->prepare();
+
+echo $this->form()->openTag($form);
+echo $this->formRow($form->get('destinatario'));
+echo $this->formRow($form->get('asunto'));
+echo $this->formRow($form->get('mensaje'));
+echo $this->formSubmit($form->get('submit'));
+echo $this->form()->closeTag();

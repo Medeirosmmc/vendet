@@ -1,0 +1,17 @@
+<h1><?php echo $this->escapeHtml($this->message->asunto); ?></h1>
+
+<dl>
+    <dt>From:</dt>
+    <dd><?php echo $this->escapeHtml($this->message->remitente); ?></dd>
+    <dt>Date:</dt>
+    <dd><?php echo $this->escapeHtml($this->message->fecha_enviado); ?></dd>
+</dl>
+
+<div>
+    <?php echo $this->escapeHtml($this->message->mensaje); ?>
+</div>
+
+<p>
+    <a href="<?php echo $this->url('message', ['action' => 'compose', 'id_dest' => $this->message->remitente]); ?>">Reply</a>
+    <a href="<?php echo $this->url('message'); ?>">Back to Inbox</a>
+</p>
