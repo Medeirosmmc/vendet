@@ -2,6 +2,7 @@
 namespace Game\Service;
 
 use Laminas\Db\Adapter\AdapterInterface;
+use Laminas\Db\TableGateway\TableGateway;
 
 class TroopService
 {
@@ -16,9 +17,62 @@ class TroopService
 
     public function getTroops($userId)
     {
-        $table = new \Laminas\Db\TableGateway\TableGateway('mob_tropas', $this->dbAdapter);
+        $table = new TableGateway('mob_tropas', $this->dbAdapter);
         $rowset = $table->select(['id_usuario' => $userId]);
         return $rowset;
+    }
+
+    public function addTroops($userId, array $troopsToAdd)
+    {
+        $table = new TableGateway('mob_tropas', $this->dbAdapter);
+        foreach ($troopsToAdd as $troopName => $quantity) {
+            if ($quantity <= 0) continue;
+
+            $userTroop = $table->select(['id_usuario' => $userId, 'tropa' => $troopName])->current();
+
+            if ($userTroop) {
+                $newQuantity = $userTroop->cantidad + $quantity;
+                $table->update(['cantidad' => $newQuantity], ['id_usuario' => $userId, 'tropa' => $troopName]);
+            } else {
+                $table->insert(['id_usuario' => $userId, 'tropa' => $troopName, 'cantidad' => $quantity]);
+            }
+        }
+    }
+
+    public function updateTroops($userId, array $troops)
+    {
+        $table = new TableGateway('mob_tropas', $this->dbAdapter);
+        // First, delete all existing troops for the user to ensure a clean slate
+        $table->delete(['id_usuario' => $userId]);
+        // Now, insert the new troop counts
+        foreach ($troops as $troopName => $quantity) {
+            if ($quantity > 0) {
+                $table->insert(['id_usuario' => $userId, 'tropa' => $troopName, 'cantidad' => $quantity]);
+            }
+        }
+    }
+
+    public function subtractTroops($userId, array $troopsToSubtract)
+    {
+        $table = new TableGateway('mob_tropas', $this->dbAdapter);
+        foreach ($troopsToSubtract as $troopName => $quantity) {
+            if ($quantity <= 0) continue;
+
+            $userTroop = $table->select(['id_usuario' => $userId, 'tropa' => $troopName])->current();
+
+            if ($userTroop) {
+                $newQuantity = $userTroop->cantidad - $quantity;
+                if ($newQuantity < 0) {
+                    throw new \Exception("Cannot subtract more troops than available for user $userId, troop $troopName");
+                }
+
+                if ($newQuantity == 0) {
+                    $table->delete(['id_usuario' => $userId, 'tropa' => $troopName]);
+                } else {
+                    $table->update(['cantidad' => $newQuantity], ['id_usuario' => $userId, 'tropa' => $troopName]);
+                }
+            }
+        }
     }
 
     public function getTroopsData($userId, $troopSelection = null)
@@ -57,13 +111,13 @@ class TroopService
             $combatData[$troopName] = [
                 'a' => [
                     'total' => $attackerQuantity,
-                    'ataque' => $troopDetails['attack'],
-                    'defensa' => $troopDetails['defense'],
+                    'attack' => $troopDetails['attack'],
+                    'defense' => $troopDetails['defense'],
                 ],
                 'd' => [
                     'total' => $defenderQuantity,
-                    'ataque' => $troopDetails['attack'],
-                    'defensa' => $troopDetails['defense'],
+                    'attack' => $troopDetails['attack'],
+                    'defense' => $troopDetails['defense'],
                 ],
             ];
         }

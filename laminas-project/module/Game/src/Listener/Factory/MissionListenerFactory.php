@@ -19,7 +19,8 @@ class MissionListenerFactory implements FactoryInterface
             $container->get(CombatService::class),
             $container->get(PlayerService::class),
             $container->get(TroopService::class),
-            $container->get(BattleReportService::class)
+            $container->get(BattleReportService::class),
+            $container->get('MissionQueueService')
         );
     }
 }

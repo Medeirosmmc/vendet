@@ -6,6 +6,7 @@ use Laminas\ServiceManager\Factory\FactoryInterface;
 use Game\Service\MissionService;
 use Game\Model\Mapper\MissionMapper;
 use Game\Service\PlayerService;
+use Game\Service\TroopService;
 
 class MissionServiceFactory implements FactoryInterface
 {
@@ -14,7 +15,8 @@ class MissionServiceFactory implements FactoryInterface
         return new MissionService(
             new MissionMapper($container->get(\Laminas\Db\Adapter\AdapterInterface::class)),
             $container->get(PlayerService::class),
-            $container->get('MissionQueueService')
+            $container->get('MissionQueueService'),
+            $container->get(TroopService::class)
         );
     }
 }

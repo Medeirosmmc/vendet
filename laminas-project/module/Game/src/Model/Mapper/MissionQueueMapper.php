@@ -2,31 +2,53 @@
 namespace Game\Model\Mapper;
 
 use Laminas\Db\Adapter\AdapterInterface;
+use Laminas\Db\Sql\Sql;
 use Game\Service\QueueMapperInterface;
 use Game\Model\Entity\Mission;
 
 class MissionQueueMapper implements QueueMapperInterface
-
 {
     protected $adapter;
-    protected $missionMapper;
 
     public function __construct(AdapterInterface $adapter)
     {
         $this->adapter = $adapter;
-        $this->missionMapper = new MissionMapper($adapter);
     }
 
     public function fetchQueueItems($limit = 100)
     {
-        // This logic will be handled by the ProcessQueueCommand,
-        // which should fetch missions with fecha_fin <= NOW()
-        // For now, this mapper connects the Mission entity to the QueueService
-        return [];
+        $sql = new Sql($this->adapter);
+        $select = $sql->select('mob_misiones')
+            ->where->lessThanOrEqualTo('fecha_fin', date('Y-m-d H:i:s'));
+        $select->limit($limit);
+
+        $stmt = $sql->prepareStatementForSqlObject($select);
+        $result = $stmt->execute();
+
+        $missions = [];
+        foreach ($result as $row) {
+            $missions[] = new Mission($row);
+        }
+        return $missions;
+    }
+
+    public function removeFinishedItems()
+    {
+        $sql = new Sql($this->adapter);
+        $delete = $sql->delete('mob_misiones')
+            ->where->lessThanOrEqualTo('fecha_fin', date('Y-m-d H:i:s'));
+
+        $stmt = $sql->prepareStatementForSqlObject($delete);
+        $stmt->execute();
     }
 
     public function get($id)
     {
-        return $this->missionMapper->get($id);
+        $sql = new Sql($this->adapter);
+        $select = $sql->select('mob_misiones')->where(['id_mision' => $id]);
+        $stmt = $sql->prepareStatementForSqlObject($select);
+        $result = $stmt->execute();
+        $row = $result->current();
+        return $row ? new Mission($row) : null;
     }
 }

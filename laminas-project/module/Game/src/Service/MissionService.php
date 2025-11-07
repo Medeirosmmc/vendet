@@ -5,21 +5,25 @@ use Game\Model\Mapper\MissionMapper;
 use Game\Model\Entity\Mission;
 use Game\Service\PlayerService;
 use Game\Service\QueueService;
+use Game\Service\TroopService;
 
 class MissionService
 {
     protected $missionMapper;
     protected $playerService;
     protected $queueService;
+    protected $troopService;
 
     public function __construct(
         MissionMapper $missionMapper,
         PlayerService $playerService,
-        QueueService $queueService
+        QueueService $queueService,
+        TroopService $troopService
     ) {
         $this->missionMapper = $missionMapper;
         $this->playerService = $playerService;
         $this->queueService = $queueService;
+        $this->troopService = $troopService;
     }
 
     public function getMissionsForUser($userId)
@@ -75,10 +79,13 @@ class MissionService
         $missionId = $this->saveMission($mission);
         $mission->id_mision = $missionId;
 
+        // Subtract troops from the origin building
+        $this->troopService->subtractTroops($data['id_usuario'], $data['tropas']);
+
+        // TODO: Subtract resources from the origin building
+
         // Add the mission to the queue for later processing
         $this->queueService->addToQueue($mission->getOwnerId(), null, $mission);
-
-        // TODO: Subtract troops and resources from the origin building
 
         // TODO: Send a message to the defending player
 

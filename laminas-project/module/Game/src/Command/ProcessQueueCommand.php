@@ -12,12 +12,17 @@ class ProcessQueueCommand extends Command
     protected static $defaultName = 'game:process-queue';
     private $constructionQueueService;
     private $trainingQueueService;
+    private $missionQueueService;
 
-    public function __construct(QueueService $constructionQueueService, QueueService $trainingQueueService)
-    {
+    public function __construct(
+        QueueService $constructionQueueService,
+        QueueService $trainingQueueService,
+        QueueService $missionQueueService
+    ) {
         parent::__construct();
         $this->constructionQueueService = $constructionQueueService;
         $this->trainingQueueService = $trainingQueueService;
+        $this->missionQueueService = $missionQueueService;
     }
 
     protected function execute(InputInterface $input, OutputInterface $output)
@@ -29,6 +34,10 @@ class ProcessQueueCommand extends Command
         $output->writeln('Processing training queue...');
         $this->trainingQueueService->processQueue();
         $output->writeln('Training queue processed.');
+
+        $output->writeln('Processing mission queue...');
+        $this->missionQueueService->processQueue();
+        $output->writeln('Mission queue processed.');
 
         return Command::SUCCESS;
     }

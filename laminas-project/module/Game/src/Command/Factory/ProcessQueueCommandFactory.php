@@ -11,7 +11,8 @@ class ProcessQueueCommandFactory implements FactoryInterface
     {
         return new ProcessQueueCommand(
             $container->get('ConstructionQueueService'),
-            $container->get('TrainingQueueService')
+            $container->get('TrainingQueueService'),
+            $container->get('MissionQueueService')
         );
     }
 }

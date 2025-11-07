@@ -18,26 +18,29 @@ class MissionListener extends AbstractListenerAggregate
     protected $playerService;
     protected $troopService;
     protected $battleReportService;
+    protected $missionQueueService;
 
     public function __construct(
         MissionService $missionService,
         CombatService $combatService,
         PlayerService $playerService,
         TroopService $troopService,
-        BattleReportService $battleReportService
+        BattleReportService $battleReportService,
+        QueueService $missionQueueService
     ) {
         $this->missionService = $missionService;
         $this->combatService = $combatService;
         $this->playerService = $playerService;
         $this->troopService = $troopService;
         $this->battleReportService = $battleReportService;
+        $this->missionQueueService = $missionQueueService;
     }
 
     public function attach(EventManagerInterface $events, $priority = 1)
     {
         $sharedManager = $events->getSharedManager();
         $this->listeners[] = $sharedManager->attach(
-            'MissionQueueService', // Identifier of the service that triggers the event
+            'MissionQueueService',
             QueueService::EVENT_ITEM_PROCESSED,
             [$this, 'onMissionComplete'],
             $priority
@@ -52,12 +55,14 @@ class MissionListener extends AbstractListenerAggregate
             return;
         }
 
-        // Mission type 1 is attack. We need to confirm this from legacy code.
+        // Mission type 1 is attack
         if ($mission->mision == 1) {
             $this->handleAttackMission($mission);
         }
-
-        // TODO: Handle other mission types like transport, etc.
+        // Mission type 5 is returning
+        elseif ($mission->mision == 5) {
+            $this->handleReturnMission($mission);
+        }
     }
 
     protected function handleAttackMission(Mission $mission)
@@ -72,7 +77,6 @@ class MissionListener extends AbstractListenerAggregate
         );
 
         if (!$defender) {
-            // No defender, troops return home
             $this->createReturnMission($mission, $attackingTroops);
             return;
         }
@@ -83,31 +87,48 @@ class MissionListener extends AbstractListenerAggregate
             $mission->coord_dest_2,
             $mission->coord_dest_3
         );
-        $defenderTroops = $this->troopService->getTroops($defenderBuilding->id_edificio)->toArray();
 
-        // Run combat
+        $defenderTroopsResult = $this->troopService->getTroops($defenderBuilding->id_edificio);
+        $defenderTroops = [];
+        foreach ($defenderTroopsResult as $troop) {
+            $defenderTroops[$troop->tropa] = $troop->cantidad;
+        }
+
         $result = $this->combatService->calculateCombat($attackingTroops, $defenderTroops);
 
-        // Save battle report
         $this->battleReportService->saveReport([
             'atacante' => $attackerId,
             'defensor' => $defenderId,
             'html' => json_encode($result),
         ]);
 
-        // Create return mission for surviving troops
-        $survivingTroops = [];
+        $survivingAttackers = [];
         foreach ($result['remaining'] as $troopName => $data) {
-            if ($data['a']['total'] > 0) {
-                $survivingTroops[$troopName] = round($data['a']['total']);
+            if (isset($data['a']['total']) && $data['a']['total'] > 0) {
+                $survivingAttackers[$troopName] = round($data['a']['total']);
             }
         }
 
-        if (!empty($survivingTroops)) {
-            $this->createReturnMission($mission, $survivingTroops);
+        if (!empty($survivingAttackers)) {
+            $this->createReturnMission($mission, $survivingAttackers);
         }
 
-        // TODO: Update defender's troops
+        $survivingDefenders = [];
+        foreach ($result['remaining'] as $troopName => $data) {
+            if (isset($data['d']['total']) && $data['d']['total'] > 0) {
+                $survivingDefenders[$troopName] = round($data['d']['total']);
+            }
+        }
+
+        $this->troopService->updateTroops($defenderId, $survivingDefenders);
+    }
+
+    protected function handleReturnMission(Mission $mission)
+    {
+        $returningTroops = json_decode($mission->tropas, true);
+        if (!empty($returningTroops)) {
+            $this->troopService->addTroops($mission->id_usuario, $returningTroops);
+        }
     }
 
     protected function createReturnMission(Mission $originalMission, array $troops)
@@ -127,6 +148,9 @@ class MissionListener extends AbstractListenerAggregate
             'duracion'       => $originalMission->duracion,
         ]);
 
-        $this->missionService->saveMission($returnMission);
+        $missionId = $this->missionService->saveMission($returnMission);
+        $returnMission->id_mision = $missionId;
+
+        $this->missionQueueService->addToQueue($returnMission->getOwnerId(), null, $returnMission);
     }
 }
