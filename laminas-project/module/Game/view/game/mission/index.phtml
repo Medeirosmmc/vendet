@@ -1,0 +1,39 @@
+<h1>Send Mission</h1>
+
+<form action="<?php echo $this->url('mission', ['action' => 'create']); ?>" method="post">
+    <div class="form-group">
+        <label for="coord_dest_1">Target Coordinates</label>
+        <input type="text" name="coord_dest_1" placeholder="X" size="3" />
+        <input type="text" name="coord_dest_2" placeholder="Y" size="3" />
+        <input type="text" name="coord_dest_3" placeholder="Z" size="3" />
+    </div>
+
+    <h3>Troops</h3>
+    <table class="table">
+        <tr>
+            <th>Unit</th>
+            <th>Available</th>
+            <th>Quantity</th>
+        </tr>
+        <?php foreach ($this->troops as $troop) : ?>
+            <tr>
+                <td><?php echo $this->escapeHtml(ucfirst($troop->nombre)); ?></td>
+                <td><?php echo $this->escapeHtml($troop->cantidad); ?></td>
+                <td><input type="text" name="tropas[<?php echo $this->escapeHtml($troop->nombre); ?>]" size="5" /></td>
+            </tr>
+        <?php endforeach; ?>
+    </table>
+
+    <div class="form-group">
+        <label for="mision">Mission Type</label>
+        <select name="mision">
+            <option value="1">Attack</option>
+            <option value="3">Transport</option>
+            <?php // Add other mission types as needed ?>
+        </select>
+    </div>
+
+    <?php // TODO: Add resource transport fields for transport missions ?>
+
+    <button type="submit">Send Mission</button>
+</form>

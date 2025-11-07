@@ -3,21 +3,36 @@ namespace Game\Model\Entity;
 
 use Game\Service\QueueableInterface;
 
-class Building implements QueueableInterface
+class Building //implements QueueableInterface
 {
-    private $name;
-    private $level;
-    private $coordinates;
-    private $cost;
-    private $time;
+    public $id_edificio;
+    public $id_usuario;
+    public $nombre;
+    public $nivel;
+    public $coord1;
+    public $coord2;
+    public $coord3;
 
-    public function __construct($name, $level, $coordinates, $cost, $time)
+    // Properties for QueueableInterface, can be populated as needed
+    public $cost;
+    public $time;
+
+    public function __construct(array $data = [])
     {
-        $this->name = $name;
-        $this->level = $level;
-        $this->coordinates = $coordinates;
-        $this->cost = $cost;
-        $this->time = $time;
+        $this->exchangeArray($data);
+    }
+
+    public function exchangeArray(array $data)
+    {
+        $this->id_edificio = $data['id_edificio'] ?? null;
+        $this->id_usuario  = $data['id_usuario'] ?? null;
+        $this->nombre      = $data['nombre'] ?? null;
+        $this->nivel       = $data['nivel'] ?? 0;
+        $this->coord1      = $data['coord1'] ?? 0;
+        $this->coord2      = $data['coord2'] ?? 0;
+        $this->coord3      = $data['coord3'] ?? 0;
+        $this->cost        = $data['cost'] ?? [];
+        $this->time        = $data['time'] ?? 0;
     }
 
     public function getQueueCost()
@@ -32,16 +47,16 @@ class Building implements QueueableInterface
 
     public function getQueueItemName()
     {
-        return $this->name;
+        return $this->nombre;
     }
 
     public function getQueueItemLevel()
     {
-        return $this->level;
+        return $this->nivel;
     }
 
     public function getCoordinates()
     {
-        return $this->coordinates;
+        return [$this->coord1, $this->coord2, $this->coord3];
     }
 }
