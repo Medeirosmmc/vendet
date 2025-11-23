@@ -2,18 +2,12 @@
 namespace Game;
 
 use Game\Service\AuthenticationService as GameAuthenticationService;
-use Game\Service\Factory\AuthenticationServiceFactory;
 use Game\Service\Factory\LaminasAuthServiceFactory;
 use Game\Service\PlayerService;
-use Game\Service\Factory\PlayerServiceFactory;
 use Game\Service\ConstructionService;
-use Game\Service\Factory\ConstructionServiceFactory;
 use Game\Service\TrainingService;
-use Game\Service\Factory\TrainingServiceFactory;
 use Game\Service\TroopService;
-use Game\Service\Factory\TroopServiceFactory;
 use Game\Service\CombatService;
-use Game\Service\Factory\CombatServiceFactory;
 use Laminas\Authentication\AuthenticationService;
 use Laminas\Router\Http\Literal;
 use Laminas\ServiceManager\Factory\InvokableFactory;
@@ -32,13 +26,13 @@ use Laminas\Router\Http\Segment;
 return [
     'service_manager' => [
         'factories' => [
-            GameAuthenticationService::class => AuthenticationServiceFactory::class,
+            GameAuthenticationService::class => \Laminas\ServiceManager\Factory\ReflectionFactory::class,
             AuthenticationService::class => LaminasAuthServiceFactory::class,
-            PlayerService::class => PlayerServiceFactory::class,
-            ConstructionService::class => ConstructionServiceFactory::class,
-            TrainingService::class => TrainingServiceFactory::class,
-            TroopService::class => TroopServiceFactory::class,
-            CombatService::class => CombatServiceFactory::class,
+            PlayerService::class => \Laminas\ServiceManager\Factory\ReflectionFactory::class,
+            ConstructionService::class => \Laminas\ServiceManager\Factory\ReflectionFactory::class,
+            TrainingService::class => \Laminas\ServiceManager\Factory\ReflectionFactory::class,
+            TroopService::class => \Laminas\ServiceManager\Factory\ReflectionFactory::class,
+            CombatService::class => \Laminas\ServiceManager\Factory\ReflectionFactory::class,
         ],
     ],
     'router' => [
