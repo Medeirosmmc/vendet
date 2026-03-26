@@ -1,3 +1,19 @@
-<h1>Battle Reports</h1>
+<h1>Attack</h1>
+<form method="post" action="<?php echo $this->url('combat', ['action' => 'attack']); ?>">
+    <label for="coord_x">X:</label>
+    <input type="text" name="coord_x" id="coord_x">
+    <label for="coord_y">Y:</label>
+    <input type="text" name="coord_y" id="coord_y">
+    <label for="coord_z">Z:</label>
+    <input type="text" name="coord_z" id="coord_z">
 
-<p>Here you will see a list of your past battles.</p>
+    <h2>Troops</h2>
+    <?php foreach ($this->troops as $troop) : ?>
+        <label for="troop_<?php echo $troop->tropa; ?>"><?php echo $troop->tropa; ?>:</label>
+        <input type="text" name="troops[<?php echo $troop->tropa; ?>]" id="troop_<?php echo $troop->tropa; ?>" value="0">
+        (Available: <?php echo $troop->cantidad; ?>)
+        <br>
+    <?php endforeach; ?>
+
+    <input type="submit" value="Attack">
+</form>

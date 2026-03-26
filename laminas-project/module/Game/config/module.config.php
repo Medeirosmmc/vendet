@@ -14,6 +14,16 @@ use Game\Service\TroopService;
 use Game\Service\Factory\TroopServiceFactory;
 use Game\Service\CombatService;
 use Game\Service\Factory\CombatServiceFactory;
+use Game\Service\QueueService;
+use Game\Service\Factory\QueueServiceFactory;
+use Game\Service\ConstructionQueueMapper;
+use Game\Service\Factory\ConstructionQueueMapperFactory;
+use Game\Service\TrainingQueueMapper;
+use Game\Service\Factory\TrainingQueueMapperFactory;
+use Game\Service\BattleReportService;
+use Game\Service\Factory\BattleReportServiceFactory;
+use Game\Service\BattleReportMapper;
+use Game\Service\Factory\BattleReportMapperFactory;
 use Laminas\Authentication\AuthenticationService;
 use Laminas\Router\Http\Literal;
 use Laminas\ServiceManager\Factory\InvokableFactory;
@@ -27,11 +37,51 @@ use Game\Controller\TroopController;
 use Game\Controller\Factory\TroopControllerFactory;
 use Game\Controller\CombatController;
 use Game\Controller\Factory\CombatControllerFactory;
+use Game\Controller\MessageController;
+use Game\Controller\Factory\MessageControllerFactory;
+use Game\Controller\MissionController;
+use Game\Controller\Factory\MissionControllerFactory;
 use Laminas\Router\Http\Segment;
+use Game\Command\ProcessQueueCommand;
+use Game\Command\Factory\ProcessQueueCommandFactory;
+use Game\Listener\ConstructionListener;
+use Game\Listener\Factory\ConstructionListenerFactory;
+use Game\Listener\TrainingListener;
+use Game\Listener\Factory\TrainingListenerFactory;
+use Game\Listener\MissionListener;
+use Game\Listener\Factory\MissionListenerFactory;
+use Game\Service\BuildingDataService;
+use Game\Service\Factory\BuildingDataServiceFactory;
+use Game\Service\TrainingDataService;
+use Game\Service\Factory\TrainingDataServiceFactory;
+use Game\Service\MessageService;
+use Game\Service\Factory\MessageServiceFactory;
+use Game\Service\MissionService;
+use Game\Service\Factory\MissionServiceFactory;
+use Game\Model\Mapper\MissionQueueMapper;
+use Game\Model\Mapper\Factory\MissionQueueMapperFactory;
 
 return [
+    'laminas-cli' => [
+        'commands' => [
+            'game:process-queue' => ProcessQueueCommand::class,
+        ],
+    ],
     'service_manager' => [
         'factories' => [
+            ProcessQueueCommand::class => ProcessQueueCommandFactory::class,
+            ConstructionListener::class => ConstructionListenerFactory::class,
+            'ConstructionQueueServiceEvents' => function ($container) {
+                return $container->get('ConstructionQueueService')->getEventManager();
+            },
+            TrainingListener::class => TrainingListenerFactory::class,
+            'TrainingQueueServiceEvents' => function ($container) {
+                return $container->get('TrainingQueueService')->getEventManager();
+            },
+            'MissionQueueServiceEvents' => function ($container) {
+                return $container->get('MissionQueueService')->getEventManager();
+            },
+            MissionListener::class => MissionListenerFactory::class,
             GameAuthenticationService::class => AuthenticationServiceFactory::class,
             AuthenticationService::class => LaminasAuthServiceFactory::class,
             PlayerService::class => PlayerServiceFactory::class,
@@ -39,7 +89,29 @@ return [
             TrainingService::class => TrainingServiceFactory::class,
             TroopService::class => TroopServiceFactory::class,
             CombatService::class => CombatServiceFactory::class,
+            'ConstructionQueueService' => [QueueServiceFactory::class, ['mapper' => 'ConstructionQueueMapper']],
+            'TrainingQueueService' => [QueueServiceFactory::class, ['mapper' => 'TrainingQueueMapper']],
+            'MissionQueueService' => [QueueServiceFactory::class, ['mapper' => 'MissionQueueMapper']],
+            ConstructionQueueMapper::class => ConstructionQueueMapperFactory::class,
+            TrainingQueueMapper::class => TrainingQueueMapperFactory::class,
+            MissionQueueMapper::class => MissionQueueMapperFactory::class,
+            BattleReportService::class => BattleReportServiceFactory::class,
+            BattleReportMapper::class => BattleReportMapperFactory::class,
+            BuildingDataService::class => BuildingDataServiceFactory::class,
+            TrainingDataService::class => TrainingDataServiceFactory::class,
+            MessageService::class => MessageServiceFactory::class,
+            MissionService::class => MissionServiceFactory::class,
         ],
+        'aliases' => [
+            'ConstructionQueueMapper' => ConstructionQueueMapper::class,
+            'TrainingQueueMapper' => TrainingQueueMapper::class,
+            'MissionQueueMapper' => MissionQueueMapper::class,
+        ],
+    ],
+    'listeners' => [
+        'ConstructionListener' => 'ConstructionQueueService',
+        'TrainingListener' => 'TrainingQueueService',
+        'MissionListener' => 'MissionQueueService',
     ],
     'router' => [
         'routes' => [
@@ -74,9 +146,9 @@ return [
                 ],
             ],
             'training' => [
-                'type'    => Literal::class,
+                'type'    => Segment::class,
                 'options' => [
-                    'route'    => '/training',
+                    'route'    => '/training[/:action[/:id[/:unit]]]',
                     'defaults' => [
                         'controller' => TrainingController::class,
                         'action'     => 'index',
@@ -84,9 +156,9 @@ return [
                 ],
             ],
             'construction' => [
-                'type'    => Literal::class,
+                'type'    => Segment::class,
                 'options' => [
-                    'route'    => '/construction',
+                    'route'    => '/construction[/:action[/:id[/:building]]]',
                     'defaults' => [
                         'controller' => ConstructionController::class,
                         'action'     => 'index',
@@ -126,6 +198,26 @@ return [
                     ],
                 ],
             ],
+            'message' => [
+                'type'    => Segment::class,
+                'options' => [
+                    'route'    => '/message[/:action[/:id]]',
+                    'defaults' => [
+                        'controller' => MessageController::class,
+                        'action'     => 'index',
+                    ],
+                ],
+            ],
+            'mission' => [
+                'type'    => Segment::class,
+                'options' => [
+                    'route'    => '/mission[/:action[/:id]]',
+                    'defaults' => [
+                        'controller' => MissionController::class,
+                        'action'     => 'index',
+                    ],
+                ],
+            ],
         ],
     ],
     'controllers' => [
@@ -137,6 +229,8 @@ return [
             TrainingController::class => TrainingControllerFactory::class,
             TroopController::class => TroopControllerFactory::class,
             CombatController::class => CombatControllerFactory::class,
+            MessageController::class => MessageControllerFactory::class,
+            MissionController::class => MissionControllerFactory::class,
         ],
     ],
     'view_manager' => [

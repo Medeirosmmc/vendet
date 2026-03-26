@@ -8,92 +8,158 @@ class CombatService
     private $dbAdapter;
     private $troopService;
 
+    protected $battleTroops;
+    protected $remainingTroops;
+    protected $battleData;
+    protected $attackerPowerPercentage = 100;
+    protected $defenderPowerPercentage = 100;
+
     public function __construct(AdapterInterface $dbAdapter, TroopService $troopService)
     {
         $this->dbAdapter = $dbAdapter;
         $this->troopService = $troopService;
     }
 
-    public function simulateCombat($attackerId, $defenderId, array $attackingTroops)
+    public function calculateCombat(array $attackerTroops, array $defenderTroops, array $extra = array())
     {
-        $battleData = [];
-        $remainingTroops = [];
+        if (isset($extra["attackerPowerPercentage"])) $this->attackerPowerPercentage = $extra["attackerPowerPercentage"];
+        if (isset($extra["defenderPowerPercentage"])) $this->defenderPowerPercentage = $extra["defenderPowerPercentage"];
 
-        $attackerTroops = $this->troopService->getTroopsData($attackerId, $attackingTroops);
-        $defenderTroops = $this->troopService->getTroopsData($defenderId);
+        $this->battleTroops = $this->troopService->getCombatData($attackerTroops, $defenderTroops);
 
-        $currentAttackerTroops = $attackerTroops;
-        $currentDefenderTroops = $defenderTroops;
-
-        for ($round = 1; $round <= 5; $round++) {
-            list($attackerPower, $defenderPower) = $this->calculatePower($currentAttackerTroops, $currentDefenderTroops);
-
-            if ($attackerPower == 0 || $defenderPower == 0) break;
-
-            $attackerLosses = $defenderPower / ($defenderPower + $attackerPower * 2);
-            $defenderLosses = $attackerPower / ($attackerPower + $defenderPower * 2);
-
-            $currentAttackerTroops = $this->applyLosses($currentAttackerTroops, $attackerLosses);
-            $currentDefenderTroops = $this->applyLosses($currentDefenderTroops, $defenderLosses);
-
-            $battleData[$round] = [
-                'attacker_power' => $attackerPower,
-                'defender_power' => $defenderPower,
-                'attacker_losses_pct' => $attackerLosses,
-                'defender_losses_pct' => $defenderLosses,
-                'attacker_troops' => $this->getTroopCounts($currentAttackerTroops),
-                'defender_troops' => $this->getTroopCounts($currentDefenderTroops),
-            ];
-        }
-
-        return [
-            'rounds' => $battleData,
-            'winner' => $this->determineWinner($currentAttackerTroops, $currentDefenderTroops),
-        ];
+        return $this->fight($this->battleTroops);
     }
 
-    private function calculatePower($attackerTroops, $defenderTroops)
+    protected function fight($battleTroops)
     {
-        $attackerPower = 0;
-        foreach ($attackerTroops as $troop) {
-            $attackerPower += $troop['quantity'] * $troop['attack'];
-        }
+        $this->battleData = array();
 
-        $defenderPower = 0;
-        foreach ($defenderTroops as $troop) {
-            $defenderPower += $troop['quantity'] * $troop['defense'];
-        }
+        $round = 1;
 
-        return [$attackerPower, $defenderPower];
-    }
+        $attackerHasTroops = $defenderHasTroops = true;
 
-    private function applyLosses($troops, $lossPercentage)
-    {
-        $remaining = [];
-        foreach ($troops as $troop) {
-            $lost = floor($troop['quantity'] * $lossPercentage);
-            $remainingQuantity = $troop['quantity'] - $lost;
-            if ($remainingQuantity > 0) {
-                $troop['quantity'] = $remainingQuantity;
-                $remaining[] = $troop;
+        while ($round <= 5 && ($attackerHasTroops && $defenderHasTroops)) {
+
+            $power = $this->getPower($battleTroops);
+
+            $this->battleData[$round] = array(
+                "defenderAttackPower" => $power["defenderAttackPower"],
+                "defenderDefensePower" => $power["defenderDefensePower"],
+                "attackerDefensePower" => $power["attackerDefensePower"],
+                "attackerAttackPower" => $power["attackerAttackPower"],
+                "attackerPowerPercentage" => $this->attackerPowerPercentage,
+                "defenderPowerPercentage" => $this->defenderPowerPercentage
+            );
+
+            $power["defenderAttackPower"] = $power["defenderAttackPower"] * $this->defenderPowerPercentage / 100;
+            $power["attackerAttackPower"] = $power["attackerAttackPower"] * $this->attackerPowerPercentage / 100;
+
+            $lossPercentages = $this->getLossPercentages(
+                $power["attackerAttackPower"],
+                $power["attackerDefensePower"],
+                $power["defenderAttackPower"],
+                $power["defenderDefensePower"]
+            );
+
+            $attackerHasTroops = $defenderHasTroops = false;
+
+            $this->battleData[$round]["attackerVictoryPercentage"] = round(($power["attackerAttackPower"] + $power["attackerDefensePower"])*100/($power["attackerAttackPower"] + $power["attackerDefensePower"] + $power["defenderAttackPower"] + $power["defenderDefensePower"]));
+            $this->battleData[$round]["defenderVictoryPercentage"] = 100 - $this->battleData[$round]["attackerVictoryPercentage"];
+
+            foreach ($battleTroops as $troopName => $data) {
+
+                if (round($data["a"]["total"]) == 0 && round($data["d"]["total"]) == 0) continue;
+
+                $attackerTotal = $data['a']["total"];
+                $defenderTotal = $data['d']["total"];
+
+                $attackerDeaths = $attackerTotal * $lossPercentages["attacker"];
+                $defenderDeaths = $defenderTotal * $lossPercentages["defender"];
+
+                $this->battleData[$round]["troops"][$troopName] = array("a" => round($attackerTotal), "muertesA" => round($attackerDeaths), "d" => round($defenderTotal), "muertesD" => round($defenderDeaths));
+
+                $battleTroops[$troopName]["a"]["total"] = round($attackerTotal - $attackerDeaths);
+                $battleTroops[$troopName]["d"]["total"] = round($defenderTotal - $defenderDeaths);
+
+                $attackerHasTroops = $attackerHasTroops || $battleTroops[$troopName]["a"]["total"] > 0;
+                $defenderHasTroops = $defenderHasTroops || round($battleTroops[$troopName]["d"]["total"]) > 0;
             }
+
+            $round++;
         }
-        return $remaining;
+
+       $this->remainingTroops = $battleTroops;
+
+       return [
+           'rounds' => $this->battleData,
+           'remaining' => $this->remainingTroops
+       ];
     }
 
-    private function getTroopCounts($troops)
+    protected function getPower(array $battleTroops, $attackingTroop = null, $defendingTroop = null, $modifiers = false)
     {
-        $counts = [];
-        foreach ($troops as $troop) {
-            $counts[$troop['name']] = $troop['quantity'];
+        $defenderAttackPower = $defenderDefensePower = $attackerAttackPower = $attackerDefensePower = 0;
+
+        foreach ($battleTroops as $troopName => $data) {
+              if ($attackingTroop === null || $attackingTroop == $troopName) {
+                $attackerDefensePower += $data["a"]["total"] * $data["a"]["defense"];
+                $attackerAttackPower += $data["a"]["total"] * $data["a"]["attack"];
+              }
+
+              if ($defendingTroop === null || $defendingTroop == $troopName) {
+                $defenderDefensePower += $data["d"]["total"] * $data["d"]["defense"];
+                $defenderAttackPower += $data["d"]["total"] * $data["d"]["attack"];
+              }
         }
-        return $counts;
+
+        // TODO: Refactor modifiers logic to work with the new service-oriented architecture
+        // if ($modifiers) {
+        //   $modAt = $this->troopService->getTroop($attackingTroop)->getModificador($defendingTroop);
+        //   $attackerAttackPower *= $modAt;
+        //   $attackerDefensePower *= $modAt;
+
+        //   $modDef = $this->troopService->getTroop($defendingTroop)->getModificador($attackingTroop);
+        //   $defenderAttackPower *= $modDef;
+        //   $defenderDefensePower *= $modDef;
+        // }
+
+        return array(
+            "attackerDefensePower" => $attackerDefensePower,
+            "attackerAttackPower" => $attackerAttackPower,
+            "defenderDefensePower" => $defenderDefensePower,
+            "defenderAttackPower" => $defenderAttackPower
+        );
     }
 
-    private function determineWinner($attackerTroops, $defenderTroops)
+    protected function getLossPercentages($attackerAttackPower, $attackerDefensePower, $defenderAttackPower, $defenderDefensePower)
     {
-        if (empty($attackerTroops)) return 'defender';
-        if (empty($defenderTroops)) return 'attacker';
-        return 'draw'; // Ou outra lógica para determinar o vencedor em caso de empate
+        if (($defenderAttackPower+$defenderDefensePower) > ($attackerAttackPower+$attackerDefensePower) * 10) {
+          $defenderLossPercentage = 0;
+          $attackerLossPercentage = 1;
+        } elseif (($attackerAttackPower+$attackerDefensePower) > ($defenderAttackPower+$defenderDefensePower) * 10) {
+          $attackerLossPercentage = 0;
+          $defenderLossPercentage = 1;
+        } else {
+
+          $attackerLossPercentage = ($defenderAttackPower + $defenderDefensePower) / ($defenderAttackPower + $defenderDefensePower + ($attackerAttackPower +$attackerDefensePower)*2);
+          $defenderLossPercentage = ($attackerAttackPower + $attackerDefensePower) / ($attackerAttackPower + $attackerDefensePower + ($defenderAttackPower +$defenderDefensePower)*2);
+
+          $totalDefense = $defenderAttackPower + $defenderDefensePower;
+          $totalAttack = $attackerAttackPower +$attackerDefensePower;
+          if ($totalAttack > $totalDefense) {
+            $kAt = (($totalAttack*100/$totalDefense)-100)/10;
+            $kDef = 0;
+          } else {
+            $kAt = 0;
+            $kDef = (($totalDefense*100/$totalAttack)-100)/10;
+          }
+
+          $kAt /= 2;
+          $kDef /= 2;
+
+          $attackerLossPercentage = $attackerLossPercentage - $attackerLossPercentage*$kAt/100;
+          $defenderLossPercentage = $defenderLossPercentage - $defenderLossPercentage*$kDef/100;
+        }
+        return array("attacker" => $attackerLossPercentage, "defender" => $defenderLossPercentage);
     }
 }
